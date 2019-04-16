@@ -127,13 +127,3 @@ class GA():
             else:
 
                 self.do_generation(show = False)
-
-ex =[[1,1,2],[3,4,5],[1,1,1,8],[1,1,1,1,1,10]]
-
-a = GA(50,ex,np.sum,mutation_rate=0.02)
-
-#print(a.genes)
-
-a.batch_generation(10,2)
-
-#print(a.fitness_scores)
