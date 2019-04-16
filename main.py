@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 
 #Function to generate random genes from options
@@ -15,9 +16,7 @@ def cross(a, b):
     return cross
 
 
-def pool(genes, fitness, benchmark=10, size_out=50):
-    patamar = np.percentile(fitness, benchmark)
-    fit_gen = np.array([g for g, f in zip(genes, fitness) if f <= patamar])
+def pool(fit_gen, size_out=50):
     index = np.random.randint(low=0, high=len(fit_gen), size=[size_out, 2])
     new_genes = []
     for a, b in index:
@@ -27,10 +26,30 @@ def pool(genes, fitness, benchmark=10, size_out=50):
 
     return new_genes
 
+def mutation(genes,gene_options,p_mut = 0.1):
+
+    mutation_genes = generate_genes(gene_options,len(genes))
+
+    new_genes = []
+
+    for a,b in zip(genes, mutation_genes):
+
+        order = np.random.choice([0, 1], size=len(genes), p=[1 - p_mut, p_mut])
+
+        new_gene = np.array(list(map(lambda a, b, n: a if n == 0 else b, a, b, order)))
+
+        new_genes.append(new_gene)
+
+    new_genes = np.array(new_genes)
+
+    return new_genes
+
+
+
 
 class GA():
 
-    def __init__(self, pop_size, gene_options, fitness_function, polarity = 'Ascending', threshold = 10, mutation_rate = 5):
+    def __init__(self, pop_size, gene_options, fitness_function, polarity = 'Ascending', threshold = 10, mutation_rate = False):
 
         self.pop_size = pop_size
         self.polarity = polarity
@@ -47,6 +66,7 @@ class GA():
         self.fitness_scores = np.array(list(map(self.fitness_function, self.genes)))
         self.generation_n = 0
 
+
     def get_fitness(self):
 
         self.fitness_scores = np.array(list(map(self.fitness_function, self.genes)))
@@ -54,6 +74,8 @@ class GA():
         return self.fitness_scores
 
     def do_generation(self,show = True):
+
+        t = time.time()
 
         #Update generation number
         self.generation_n += 1
@@ -71,8 +93,12 @@ class GA():
             fit_gen = np.array([g for g, f in zip(self.genes, self.fitness_scores) if f >= self.cut])
 
         #Create new generation of genes
-        index = np.random.randint(low=0, high=len(fit_gen), size=[self.pop_size, 2])
-        self.genes = [cross(fit_gen[a], fit_gen[b]) for a, b in index]
+        self.genes = pool(fit_gen,self.pop_size)
+
+        #Make a mutation
+        if self.mutation_rate != False:
+
+            self.genes = mutation(self.genes, self.gene_options, self.mutation_rate)
 
         #Recalculate fitness scores
         self.fitness_scores = np.array(list(map(self.fitness_function, self.genes)))
@@ -86,7 +112,8 @@ class GA():
 
         #Print generation numbers
         if show == True:
-            print('#Generation: %i \t Best Fitness: %.4f \t Mean Fitness %.4f'%(self.generation_n,self.best_fit,np.mean(self.fitness_scores)))
+            print('#Generation: %i \t Best Fitness: %.4f \t Mean Fitness %.4f \t Execution time: %.4f'%
+                  (self.generation_n,self.best_fit,np.mean(self.fitness_scores),time.time()-t))
 
 
     def batch_generation(self, n_do = 1, n_show = 1):
@@ -101,18 +128,12 @@ class GA():
 
                 self.do_generation(show = False)
 
-
-
-
-
 ex =[[1,1,2],[3,4,5],[1,1,1,8],[1,1,1,1,1,10]]
 
-a = GA(50,ex,np.sum)
+a = GA(50,ex,np.sum,mutation_rate=0.02)
 
 #print(a.genes)
 
 a.batch_generation(10,2)
 
 #print(a.fitness_scores)
-
-#print(a.fittest_gene)
