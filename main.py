@@ -65,6 +65,7 @@ class GA():
         self.genes = generate_genes(self.gene_options, self.pop_size)
         self.fitness_scores = np.array(list(map(self.fitness_function, self.genes)))
         self.generation_n = 0
+        self.fittest_genes = []
 
 
     def get_fitness(self):
@@ -106,6 +107,8 @@ class GA():
         #Find the fittest gene
         self.fittest_gene = self.genes[
             np.argmax(self.fitness_scores)] if self.polarity == 'Ascending' else self.genes[np.argmin(self.fitness_scores)]
+        
+        self.fittest_genes.append(self.fittest_gene)
 
         #Find the best fitness score
         self.best_fit = np.max(self.fitness_scores) if self.polarity == 'Ascending' else np.min(self.fitness_scores)
